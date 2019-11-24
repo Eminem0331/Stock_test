@@ -3,7 +3,8 @@ from sqlalchemy import create_engine
 import numpy as np
 
 engine1 = create_engine('mysql+pymysql://root:123456@localhost/stock?charset=utf8', encoding='utf-8')
-engine2 = create_engine('mysql+pymysql://root:123456@localhost/stock_data?charset=utf8', encoding='utf-8')
+# engine2 = create_engine('mysql+pymysql://root:123456@localhost/stock_data?charset=utf8', encoding='utf-8')
+engine2 = create_engine("mysql+pymysql://root:Tang123456!@116.85.28.78:3306/stock_data?charset=utf8")
 q = lambda x: pd.read_sql(x, engine1)
 sql = '''
 select
