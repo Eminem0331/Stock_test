@@ -4,7 +4,7 @@ import pandas as pd
 
 engine1 = create_engine('mysql+pymysql://root:123456@localhost/stock?charset=utf8', encoding='utf-8')
 engine2 = create_engine('mysql+pymysql://root:123456@localhost/stock_data?charset=utf8', encoding='utf-8')
-# engine2 = create_engine('mysql+pymysql://root:Tang123456!@116.85.28.78/stock_data?charset=utf8', encoding='utf-8')
+engine3 = create_engine('mysql+pymysql://root:Tang123456!@116.85.28.78/stock_data?charset=utf8', encoding='utf-8')
 
 def daily_factor(date):
     q = lambda x: pd.read_sql(x, engine1)
@@ -47,6 +47,7 @@ for date in date_list:
     try:
         df=daily_factor(date)
         df.to_sql("daily_factor", con=engine2, if_exists='append', index=False, index_label="id")
+        df.to_sql("daily_factor", con=engine3, if_exists='append', index=False, index_label="id")
     except:
         print('Eminem')
         pass
