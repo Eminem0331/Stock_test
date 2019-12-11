@@ -2,12 +2,12 @@
 <project version="4">
   <component name="DataSourceManagerImpl" format="xml" multifile-model="true">
     <data-source source="LOCAL" name="Eminem" uuid="30075132-de10-4824-813f-5aedf8d9a11b">
-      <driver-ref>mysql</driver-ref>
+      <driver-ref>mysql.8</driver-ref>
       <synchronize>true</synchronize>
-      <jdbc-driver>com.mysql.jdbc.Driver</jdbc-driver>
+      <jdbc-driver>com.mysql.cj.jdbc.Driver</jdbc-driver>
       <jdbc-url>jdbc:mysql://localhost:3306</jdbc-url>
     </data-source>
-    <data-source source="LOCAL" name="cloud_stock" uuid="7fa59cf0-9e30-4cc2-9e40-8a6ca2ce0102">
+    <data-source source="LOCAL" name="cloud_stock" uuid="8cd61ed0-7104-4ced-9726-0679f2f9c640">
       <driver-ref>mysql.8</driver-ref>
       <synchronize>true</synchronize>
       <jdbc-driver>com.mysql.cj.jdbc.Driver</jdbc-driver>

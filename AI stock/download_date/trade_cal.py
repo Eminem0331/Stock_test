@@ -8,8 +8,8 @@ ts.set_token('7844a61f5276d7889cdc4171e5081161ca3037e7a58be41487650a95')
 
 pro = ts.pro_api('7844a61f5276d7889cdc4171e5081161ca3037e7a58be41487650a95')
 
-df=pro.trade_cal(exchange='SSE', start_date='20000101', end_date='20201231',is_open='')
-print(len(df))
+df=pro.trade_cal(exchange='SSE', start_date='20200101', end_date='20201231',is_open='')
+print(df)
 
 
 a=list(df['is_open'][0:len(df)-1])

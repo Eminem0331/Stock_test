@@ -2,35 +2,6 @@ import pandas as pd
 from sqlalchemy import create_engine
 import numpy as np
 
-engine1 = create_engine('mysql+pymysql://root:123456@localhost/stock?charset=utf8', encoding='utf-8')
-# engine2 = create_engine('mysql+pymysql://root:123456@localhost/stock_data?charset=utf8', encoding='utf-8')
-engine2 = create_engine("mysql+pymysql://root:Tang123456!@116.85.28.78:3306/stock_data?charset=utf8")
-q = lambda x: pd.read_sql(x, engine1)
-sql = '''
-select
-a.*
-from stock_data.fina_factor a join stock.stock_basic b on a.ts_code=b.ts_code
-where
-left(b.name,2)<>'ST'
-and
-left(b.name,3)<>'*ST'
-and datediff(a.end_date,b.list_date)>=365
-;
-'''
-
-sql2 = '''
-select
-distinct end_date
-from stock_data.fina_factor 
-;
-'''
-
-data=q(sql)
-index_list=list(data)[4:-2]
-print(index_list)
-date_list=list(q(sql2)['end_date'])
-print(date_list)
-
 def Stock_Quantile_qe(data,index,quantile,date):
      df=data[data['end_date']==date]
      a=df[index].quantile(quantile)
@@ -43,7 +14,8 @@ def Stock_Quantile_le(data, index, quantile, date):
      re = df[df[index] > a]['ts_code']
      return re
 
-def close_sql(ts_code,date1,date2):
+def close_sql(ts_code,date1,date2,engine):
+     engine1 = engine
      q = lambda x: pd.read_sql(x, engine1)
      sql='''
      SELECT
@@ -103,57 +75,86 @@ def rank(d,date,index):
     re['IC']=[get_ic(df,index,date)]
     return re
 
-result=pd.DataFrame([])
-for n,date in enumerate(date_list[0:-1]):
-     print(date)
-     rrr=[]
-     for index in index_list:
-          df = data[data['end_date'] == date]
-          print(index)
-          #计算IC
-          stock=df['ts_code']
-          re=[]
-          for m in stock:
-               re.append(close_sql(m, date, date_list[n + 1]))
-          re = pd.DataFrame(re, columns=['ts_code', 'close', 'close1'])
-          re[index]=list(df[index])
-          re['end_date']=list(df['end_date'])
-          re['return']=(re['close1']-re['close'])/re['close']
-          IC=get_ic(re,index,date)
+def main():
+     engine1 = create_engine('mysql+pymysql://root:123456@localhost/stock?charset=utf8', encoding='utf-8')
+     engine2 = create_engine('mysql+pymysql://root:123456@localhost/stock_data?charset=utf8', encoding='utf-8')
+     engine3 = create_engine("mysql+pymysql://root:Tang123456!@116.85.28.78:3306/stock_data?charset=utf8")
+     q = lambda x: pd.read_sql(x, engine1)
+     sql = '''
+     select
+     a.*
+     from stock_data.fina_factor a join stock.stock_basic b on a.ts_code=b.ts_code
+     where
+     left(b.name,2)<>'ST'
+     and
+     left(b.name,3)<>'*ST'
+     and datediff(a.end_date,b.list_date)>=365
+     ;
+     '''
 
-          #计算分位数换手率与换手率
-          stock1=Stock_Quantile_qe(data,index,0.2,date)
-          stock2=Stock_Quantile_qe(data,index,0.2,date_list[n+1])
-          turnover1=turnover(stock1,stock2)
-          stock3=Stock_Quantile_le(data,index,0.8,date)
-          stock4=Stock_Quantile_le(data,index,0.8,date_list[n+1])
-          turnover2=turnover(stock3,stock4)
-          re1=[]
-          for j in stock1:
-               # print(j)
-               ddd=close_sql(j,date,date_list[n+1])
-               re1.append(ddd)
-          re2=[]
-          for k in stock3:
-               # print(k)
-               dddd=close_sql(k,date,date_list[n+1])
-               re2.append(dddd)
-          re1=pd.DataFrame(re1,columns=['ts_code','close','close1'])
-          re2=pd.DataFrame(re2,columns=['ts_code','close','close1'])
+     sql2 = '''
+     select
+     distinct end_date
+     from stock_data.fina_factor 
+     ;
+     '''
 
-          future_return1=np.mean(future_return(re1)['return'])
-          future_return2=np.mean(future_return(re2)['return'])
+     data = q(sql)
+     index_list = list(data)[4:-2]
+     print(index_list)
+     date_list = list(q(sql2)['end_date'])
+     print(date_list)
+     result=pd.DataFrame([])
+     for n,date in enumerate(date_list[0:-1]):
+          print(date)
+          rrr=[]
+          for index in index_list:
+               df = data[data['end_date'] == date]
+               print(index)
+               #计算IC
+               stock=df['ts_code']
+               re=[]
+               for m in stock:
+                    re.append(close_sql(m, date, date_list[n + 1],engine1))
+               re = pd.DataFrame(re, columns=['ts_code', 'close', 'close1'])
+               re[index]=list(df[index])
+               re['end_date']=list(df['end_date'])
+               re['return']=(re['close1']-re['close'])/re['close']
+               IC=get_ic(re,index,date)
+
+               #计算分位数换手率与换手率
+               stock1=Stock_Quantile_qe(data,index,0.2,date)
+               stock2=Stock_Quantile_qe(data,index,0.2,date_list[n+1])
+               turnover1=turnover(stock1,stock2)
+               stock3=Stock_Quantile_le(data,index,0.8,date)
+               stock4=Stock_Quantile_le(data,index,0.8,date_list[n+1])
+               turnover2=turnover(stock3,stock4)
+               re1=[]
+               for j in stock1:
+                    # print(j)
+                    ddd=close_sql(j,date,date_list[n+1],engine1)
+                    re1.append(ddd)
+               re2=[]
+               for k in stock3:
+                    # print(k)
+                    dddd=close_sql(k,date,date_list[n+1],engine1)
+                    re2.append(dddd)
+               re1=pd.DataFrame(re1,columns=['ts_code','close','close1'])
+               re2=pd.DataFrame(re2,columns=['ts_code','close','close1'])
+
+               future_return1=np.mean(future_return(re1)['return'])
+               future_return2=np.mean(future_return(re2)['return'])
 
 
-          rrr.append([index,date,future_return1,future_return2,turnover1,turnover2,IC])
+               rrr.append([index,date,future_return1,future_return2,turnover1,turnover2,IC])
 
-     rrr=pd.DataFrame(rrr,columns=['factor_name','end_date','Minimum_quantile_return','Maximum_quantile_return',
-                                   'Minimum_quantile_turnover','Maximum_quantile_turnover','IC'])
-     rrr.to_sql("result", con=engine2, if_exists='append', index=False, index_label="id")
-     result=pd.concat([result,rrr],axis=0,ignore_index=True)
-     # result.to_sql("result", con=engine2, if_exists='append', index=False, index_label="id")
+          rrr=pd.DataFrame(rrr,columns=['factor_name','end_date','Minimum_quantile_return','Maximum_quantile_return',
+                                        'Minimum_quantile_turnover','Maximum_quantile_turnover','IC'])
+          rrr.to_sql("result", con=engine2, if_exists='append', index=False, index_label="id")
+          result=pd.concat([result,rrr],axis=0,ignore_index=True)
+          # result.to_sql("result", con=engine2, if_exists='append', index=False, index_label="id")
 
-print(result)
+     print(result)
 
 # result.to_sql("result", con=engine1, if_exists='append', index=False, index_label="id")
 
